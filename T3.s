@@ -4,7 +4,7 @@
 
 ; CONFIG1
 CONFIG FOSC = INTRC_CLKOUT ; Oscillator Selection bits (RC oscillator: CLKOUT function on RA6/OSC2/CLKOUT pin, RC on RA7/OSC1/CLKIN)
-CONFIG WDTE = OFF ; Watchdog Timer Enable bit (WDT enabled)
+CONFIG WDTE = OFF ; Watchdog Timer Enable bit (WDT disabled)
 CONFIG PWRTE = OFF ; Power-up Timer Enable bit (PWRT disabled)
 CONFIG MCLRE = ON ; RE3/MCLR pin function select bit (RE3/MCLR pin function is MCLR)
 CONFIG CP = OFF ; Code Protection bit (Program memory code protection is disabled)
@@ -22,42 +22,33 @@ CONFIG WRT = OFF ; Flash Program Memory Self Write Enable bits (Write protection
 #include <xc.inc>
 
 PSECT   MainCode, global, class = CODE, delta = 2
+; Definici√≥n de constantes
+COUNT_MAX EQU 5 ; Valor m√°ximo del contador (cantidad de LEDs)
 
-; DefiniciÛn de constantes
-COUNT_MAX EQU 5 ; Valor m·ximo del contador
+; Definici√≥n de registros
+count EQU 0x20 ; Registro para almacenar el valor del contador (3 bits)
 
-; DefiniciÛn de registros
-count EQU 0x20 ; Registro para almacenar el valor del contador (5 bits)
-temp EQU 0x21 ; Registro temporal
-
-; InicializaciÛn del programa
+; Inicializaci√≥n del programa
 ORG 0x00
 GOTO Main
 
 Main:
-    BANKSEL PORTC
-    CLRF PORTC ; Limpiar PORTC
-    BCF TRISC, 0 ; Configurar RC0 como entrada (BotÛn 1)
-    BCF TRISC, 1 ; Configurar RC1 como entrada (BotÛn 2)
-    
-   BANKSEL PORTA
+    BANKSEL PORTA
     CLRF PORTA ; Limpiar PORTA
     BANKSEL TRISA
-    CLRF TRISA ; Configurar PORTA como salida
-   ;BSF TRISA, 0 ; Configurar RA0 como salida (LED 1)
-   ;BSF TRISA, 1 ; Configurar RA1 como salida (LED 2)
-   ;BSF TRISA, 2 ; Configurar RA2 como salida (LED 3)
-   ;BSF TRISA, 3 ; Configurar RA3 como salida (LED 4)
-   ;BSF TRISA, 4 ; Configurar RA4 como salida (LED 5)
+    CLRF TRISA ; Configurar PORTA como salida para los LEDs
+    BANKSEL TRISC
+    BSF TRISC, 0 ; Configurar RC0 como entrada (Bot√≥n 1)
+    BSF TRISC, 1 ; Configurar RC1 como entrada (Bot√≥n 2)
 
 MainLoop:
     BANKSEL PORTC
-    BTFSC PORTC, 0 ; Verificar si el botÛn 1 est· presionado
-    GOTO Boton1Presionado ; Si est· presionado, saltar a Boton1Presionado
+    BTFSC PORTC, 0 ; Verificar si el bot√≥n 1 est√° presionado
+    GOTO Boton1Presionado ; Si est√° presionado, saltar a Boton1Presionado
 
     BANKSEL PORTC
-    BTFSC PORTC, 1 ; Verificar si el botÛn 2 est· presionado
-    GOTO Boton2Presionado ; Si est· presionado, saltar a Boton2Presionado
+    BTFSC PORTC, 1 ; Verificar si el bot√≥n 2 est√° presionado
+    GOTO Boton2Presionado ; Si est√° presionado, saltar a Boton2Presionado
 
     GOTO BotonNoPresionado ; Si no se presionaron botones, saltar a BotonNoPresionado
 
@@ -73,31 +64,47 @@ BotonNoPresionado:
     ; No se presionaron botones, continuar sin hacer nada
     GOTO ActualizarLeds ; Saltar a ActualizarLeds
 
-    GOTO Delay
 ActualizarLeds:
     ; Actualizar los LEDs
     BANKSEL count
     MOVF count, W ; Mover el valor del contador a W
+
+    ; Verificar si el contador es mayor a COUNT_MAX
+    BANKSEL COUNT_MAX
+    SUBWF count, W ; Restar el valor del contador a COUNT_MAX
+    BTFSC STATUS, 0 ; Saltar si el resultado es cero (C = 0, el contador es mayor a COUNT_MAX)
+    GOTO CercadelCinco ; Si es mayor, saltar al c√≥digo para encender todos los LEDs
+
+    ; Verificar si el contador es menor a 1
+    BTFSS STATUS, 2 ; Saltar si el resultado es cero (Z = 1, el contador es menor a 1)
+    GOTO MasCercaDelCero ; Si no es cero, saltar al c√≥digo para apagar todos los LEDs
+    ; Si no se cumplen las condiciones anteriores, el contador est√° entre 1 y COUNT_MAX
     BANKSEL PORTA
     MOVWF PORTA ; Mostrar el valor del contador en los LEDs
+    RETURN
 
-    ; Retardo
-    MOVLW 100 ; Valor de retardo (ajustar seg˙n sea necesario)
-    ;call Delay ; Retardo de 100 ciclos
+CercadelCinco:
+    BANKSEL PORTA
+    MOVLW (1 << COUNT_MAX) - 1 ; Cargar m√°scara para encender todos los LEDs
+    MOVWF PORTA ; Mostrar la m√°scara en los LEDs
+    RETURN
 
-    GOTO MainLoop
+MasCercaDelCero:
+    BANKSEL PORTA
+    CLRF PORTA ; Apagar todos los LEDs
+    RETURN
 
 ; Rutina para incrementar el contador
 Incrementar:
     BANKSEL count
-    INCF count, F ; Incrementar el contador
+    INCF count, F ; Incrementar el valor del contador
     CALL VerificarLeds ; Verificar los LEDs
     RETURN
 
 ; Rutina para decrementar el contador
 Decrementar:
     BANKSEL count
-    DECF count, F ; Decrementar el contador
+    DECF count, F ; Decrementar el valor del contador
     CALL VerificarLeds ; Verificar los LEDs
     RETURN
 
@@ -106,38 +113,27 @@ VerificarLeds:
     BANKSEL count
     MOVF count, W ; Mover el valor del contador a W
 
-    ; Verificar si el contador es mayor a 5
+    ; Verificar si el contador es mayor a COUNT_MAX
     BANKSEL COUNT_MAX
     SUBWF count, W ; Restar el valor del contador a COUNT_MAX
     BTFSC STATUS, 0 ; Saltar si el resultado es cero (C = 0, el contador es mayor a COUNT_MAX)
-    GOTO CercadelCinco ; Si es mayor, saltar al cÛdigo para encender todos los LEDs
+    GOTO CercadelCinco ; Si es mayor, saltar al c√≥digo para encender todos los LEDs
 
     ; Verificar si el contador es menor a 1
     BTFSS STATUS, 2 ; Saltar si el resultado es cero (Z = 1, el contador es menor a 1)
-    GOTO MasCercaDelCero ; Si no es cero, saltar al cÛdigo para apagar todos los LEDs
-    ; Si no se cumplen las condiciones anteriores, el contador est· entre 1 y 5
+    GOTO MasCercaDelCero ; Si no es cero, saltar al c√≥digo para apagar todos los LEDs
+    ; Si no se cumplen las condiciones anteriores, el contador est√° entre 1 y COUNT_MAX
     BANKSEL PORTA
     MOVWF PORTA ; Mostrar el valor del contador en los LEDs
     RETURN
 
-CercadelCinco:
-    BANKSEL PORTA
-    MOVLW (1 << COUNT_MAX) - 1 ; Cargar m·scara para encender todos los LEDs
-    MOVWF PORTA ; Mostrar la m·scara en los LEDs
-    RETURN
-
-MasCercaDelCero:
-    BANKSEL PORTA
-    CLRF PORTA ; Apagar todos los LEDs
-    RETURN
-    
-    ; Rutina de retardo
+; Subrutina de retardo
 Delay:
-   MOVLW 0xFF ; Valor inicial para el contador
-   MOVWF temp ; Guardar el valor inicial en un registro temporal
+   MOVWF 0x21 ; Guardar el valor inicial en un registro temporal
 
 DelayLoop:
-   DECFSZ temp, F ; Decrementar el contador y verificar si es cero
+   DECFSZ 0x21, F ; Decrementar el contador y verificar si es cero
    GOTO DelayLoop ; Si no es cero, repetir el bucle
+   RETURN
 
 
