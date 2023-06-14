@@ -3,137 +3,212 @@
 ; Assembly source line config statements
 
 ; CONFIG1
-CONFIG FOSC = INTRC_CLKOUT ; Oscillator Selection bits (RC oscillator: CLKOUT function on RA6/OSC2/CLKOUT pin, RC on RA7/OSC1/CLKIN)
-CONFIG WDTE = OFF ; Watchdog Timer Enable bit (WDT disabled)
-CONFIG PWRTE = OFF ; Power-up Timer Enable bit (PWRT disabled)
-CONFIG MCLRE = ON ; RE3/MCLR pin function select bit (RE3/MCLR pin function is MCLR)
-CONFIG CP = OFF ; Code Protection bit (Program memory code protection is disabled)
-CONFIG CPD = OFF ; Data Code Protection bit (Data memory code protection is disabled)
-CONFIG BOREN = OFF ; Brown Out Reset Selection bits (BOR enabled)
-CONFIG IESO = OFF ; Internal External Switchover bit (Internal/External Switchover mode is enabled)
-CONFIG FCMEN = OFF ; Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
-CONFIG LVP = OFF ; Low Voltage Programming Enable bit (RB3/PGM pin has PGM function, low voltage programming enabled)
+  CONFIG  FOSC = INTRC_CLKOUT   ; Oscillator Selection bits (INTOSC oscillator: CLKOUT function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
+  CONFIG  WDTE = OFF             ; Watchdog Timer Enable bit (WDT enabled)
+  CONFIG  PWRTE = OFF           ; Power-up Timer Enable bit (PWRT disabled)
+  CONFIG  MCLRE = ON            ; RE3/MCLR pin function select bit (RE3/MCLR pin function is MCLR)
+  CONFIG  CP = OFF              ; Code Protection bit (Program memory code protection is disabled)
+  CONFIG  CPD = OFF             ; Data Code Protection bit (Data memory code protection is disabled)
+  CONFIG  BOREN = OFF           ; Brown Out Reset Selection bits (BOR disabled)
+  CONFIG  IESO = OFF            ; Internal External Switchover bit (Internal/External Switchover mode is disabled)
+  CONFIG  FCMEN = OFF           ; Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is disabled)
+  CONFIG  LVP = OFF             ; Low Voltage Programming Enable bit (RB3 pin has digital I/O, HV on MCLR must be used for programming)
 
 ; CONFIG2
-CONFIG BOR4V = BOR40V ; Brown-out Reset Selection bit (Brown-out Reset set to 4.0V)
-CONFIG WRT = OFF ; Flash Program Memory Self Write Enable bits (Write protection off)
+  CONFIG  BOR4V = BOR40V        ; Brown-out Reset Selection bit (Brown-out Reset set to 4.0V)
+  CONFIG  WRT = OFF             ; Flash Program Memory Self Write Enable bits (Write protection off)
 
-; Config statements should precede project file includes.
-#include <xc.inc>
+// config statements should precede project file includes.
+#include <xc.inc> 
+  ;directiva de inclusión para un archivo de encabezado específico 
+  ;del compilador que proporciona definiciones y configuraciones específicas 
+  ;del microcontrolador PIC16F887.
 
-PSECT   MainCode, global, class = CODE, delta = 2
-; Definición de constantes
-COUNT_MAX EQU 5 ; Valor máximo del contador (cantidad de LEDs)
+; PIC16F877A Configuration Bit Settings
 
-; Definición de registros
-count EQU 0x20 ; Registro para almacenar el valor del contador (3 bits)
+;
+;   Section used for main code
+    PSECT   MainCode,global,class=CODE,delta=2
+;  Etiqueta MainCode, es donde se encuentra el código principal.
+; Initialize the PIC hardware
+;
 
-; Inicialización del programa
-ORG 0x00
-GOTO Main
-
-Main:
-    BANKSEL PORTA
-    CLRF PORTA ; Limpiar PORTA
-    BANKSEL TRISA
-    CLRF TRISA ; Configurar PORTA como salida para los LEDs
-    BANKSEL TRISC
-    BSF TRISC, 0 ; Configurar RC0 como entrada (Botón 1)
-    BSF TRISC, 1 ; Configurar RC1 como entrada (Botón 2)
-
+MAIN:  ;Marca el punto de inicio del programa principal.
+  ;serie de instrucciones BANKSEL que se utilizan para seleccionar 
+  ;los bancos de registro adecuados antes de realizar operaciones 
+  ;en puertos específicos. 
+  ;Por ejemplo, BANKSEL TRISB selecciona el banco de registro correcto 
+  ;para configurar el puerto B como salida
+  ;Las instrucciones BCF y BSF se utilizan para borrar y establecer bits 
+  ;en los puertos seleccionados. 
+  ;Por ejemplo, BCF TRISB, 0 configura el primer bit del puerto B como salida.
+   BANKSEL TRISA
+   BCF TRISA,0 ;Set RA0 to output
+   BCF TRISA,1 ;Set RA0 to output
+   BCF TRISA,2 ;Set RA0 to output
+   BCF TRISA,3 ;Set RA0 to output
+   BCF TRISA,4 ;Set RA0 to output
+   BCF TRISA,5 ;Set RA0 to output
+   BCF TRISA,6 ;Set RA0 to output
+   
+   BANKSEL TRISD
+   BSF TRISD,0 ;Set RA0 to input
+   BSF TRISD,1 ;Set RA0 to input
+   BSF TRISD,2 ;Set RA0 to input
+   BANKSEL PORTD
+   CLRF PORTB
+   
+   BANKSEL TRISC;Se definen LEDS como salida
+   BCF TRISC, 0
+   BCF TRISC, 1
+   BCF TRISC, 2
+   BCF TRISC, 3
+    BANKSEL PORTC
+   CLRF PORTC
+    ;Después de configurar los puertos, el programa entra en un bucle principal 
+    ;etiquetado como MainLoop. Este bucle realiza una secuencia de encendido y apagado 
+    ;de un pin específico del puerto B, seguido de una llamada a la subrutina 
+    ;DELAY para crear una pausa.
+    NUMERO EQU 0x12 ;Crear variable NUMERO y asignarla al registro de uso general 0x12
+    CLRF NUMERO ;Limpio la variable NUMERO
+    MOVLW 0 ;Se coloca la literal 4 en el registro de trabajo
+    MOVWF NUMERO ;Mover el contenido del registro de trabajo W, a variable numero
+    CLRW ;Limpiar registro de trabajo
+    ;BCF	PORTD, 1 ; Colocar en 1 lógico el puerto D1
+   
 MainLoop:
-    BANKSEL PORTC
-    BTFSC PORTC, 0 ; Verificar si el botón 1 está presionado
-    GOTO Boton1Presionado ; Si está presionado, saltar a Boton1Presionado
+    
+    
+    
+  ;Inicio de sección botones y condiciones
+    BTFSC PORTD, 0 ;Si se presiona el botón en RD0...
+    GOTO INCREMENTO
+    
+    
+    BTFSC PORTD, 1; Si se presiona el botón en RD1...
+    GOTO DECREMENTO
+    
+    /*
+    BTFSC PORTD, 2 ; Si se presiona el botón en RD2...
+    GOTO BORRAR	; Ir a subrutina BORRAR
+    ;Se limpia el estado de los botones
+     LRF PORTD
+    */
+    GOTO CALCULARLEDS
+    
+   
+    
+    GOTO	    MainLoop            ; Una vez que se completa el retraso, el programa vuelve al bucle principal y repite el proceso.
+INCREMENTO:
+    ; Comparar si NUMERO es igual a 0
+    MOVLW 4     ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSS STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    INCF NUMERO ;Si los valores no son iguales, entonces no es 4, y debe incrementar
+    MOVF NUMERO, 0 ;Mover el contenido de la variable NUMERO a W, para monitoreo
+    BCF PORTC, 0 
+    CALL DELAY
+    CALL DELAY
+   ; Llamar a la subrutina si NUMERO es igual a 0
+   GOTO MainLoop
+DECREMENTO:
+    ; Comparar si NUMERO es igual a 0
+    MOVLW 0     ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSS STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    DECF NUMERO
+    MOVF NUMERO, 0
+    CALL DELAY
+    CALL DELAY
+    GOTO MainLoop
+   ; Llamar a la subrutina si NUMERO es igual a 0
+    
+    
+CALCULARLEDS:
+   ; Comparar si NUMERO es igual a 0
+    MOVLW 0     ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSC STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+   GOTO ENCENDERLED0
+    MOVF PORTC, 0
+   ; BCF PORTC, 0
+     ; Comparar si NUMERO es igual a 0
+    MOVLW 1     ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSC STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    GOTO ENCENDERLED1
+    ;MOVF PORTC, 0
+    ;BCF PORTC, 0
+     ; Comparar si NUMERO es igual a 0
+    MOVLW 2    ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSC STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    GOTO ENCENDERLED2
+    ;MOVF PORTC, 0
+    ;BCF PORTC, 0
+     ; Comparar si NUMERO es igual a 0
+    MOVLW 3    ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSC STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    GOTO ENCENDERLED3
+    ;MOVF PORTC, 0
+    ;BCF PORTC, 0
+    ; Comparar si NUMERO es igual a 0
+    MOVLW 4    ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSC STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    GOTO ENCENDERLED4
+    ;MOVF PORTC, 0
+    ;BCF PORTC, 0
+    
+    
+    GOTO MainLoop
+    
+ENCENDERLED0:
+    BCF	PORTC,0
+    BCF PORTC,1
+    BCF PORTC,2
+    BCF PORTC,3
+  GOTO MainLoop
+ENCENDERLED1:
+    BSF	PORTC,0
+    BCF PORTC,1
+    BCF PORTC,2
+    BCF PORTC,3
+   GOTO MainLoop
+ENCENDERLED2:
+    BCF	PORTC,0
+    BSF PORTC,1
+    BCF PORTC,2
+    BCF PORTC,3
+GOTO MainLoop
+ENCENDERLED3:
+    BCF	PORTC,0
+    BCF PORTC,1
+    BSF PORTC,2
+    BCF PORTC,3
+GOTO MainLoop
+ENCENDERLED4:
+    BCF	PORTC,0
+    BCF PORTC,1
+    BCF PORTC,2
+    BSF PORTC,3
+    GOTO MainLoop
+    ;BSF PORTC,4
+ 
+DELAY: ;Start DELAY subroutine here
+        movlw 400 ;Load initial value for the delay
+        movwf 0x10 ;Copy the value from working reg to the file register 0x10
+        movwf 0x11 ;Copy the value from working reg to the file register 0x11
 
-    BANKSEL PORTC
-    BTFSC PORTC, 1 ; Verificar si el botón 2 está presionado
-    GOTO Boton2Presionado ; Si está presionado, saltar a Boton2Presionado
+DELAY_LOOP: ;Start delay loop
+        decfsz 0x10, F ;Decrement the f register 0x10 and check if not zero
+        goto DELAY_LOOP ;If not then go to the DELAY_LOOP labe
+        decfsz 0x11, F ;Else decrement the f register 0x11, check if it is not 0
+        goto DELAY_LOOP ;If not then go to the DELAY_LOOP label
+        retlw 0 ;Else return from the subroutine
 
-    GOTO BotonNoPresionado ; Si no se presionaron botones, saltar a BotonNoPresionado
 
-Boton1Presionado:
-    CALL Incrementar ; Llamar a la rutina de incremento
-    GOTO ActualizarLeds ; Saltar a ActualizarLeds
-
-Boton2Presionado:
-    CALL Decrementar ; Llamar a la rutina de decremento
-    GOTO ActualizarLeds ; Saltar a ActualizarLeds
-
-BotonNoPresionado:
-    ; No se presionaron botones, continuar sin hacer nada
-    GOTO ActualizarLeds ; Saltar a ActualizarLeds
-
-ActualizarLeds:
-    ; Actualizar los LEDs
-    BANKSEL count
-    MOVF count, W ; Mover el valor del contador a W
-
-    ; Verificar si el contador es mayor a COUNT_MAX
-    BANKSEL COUNT_MAX
-    SUBWF count, W ; Restar el valor del contador a COUNT_MAX
-    BTFSC STATUS, 0 ; Saltar si el resultado es cero (C = 0, el contador es mayor a COUNT_MAX)
-    GOTO CercadelCinco ; Si es mayor, saltar al código para encender todos los LEDs
-
-    ; Verificar si el contador es menor a 1
-    BTFSS STATUS, 2 ; Saltar si el resultado es cero (Z = 1, el contador es menor a 1)
-    GOTO MasCercaDelCero ; Si no es cero, saltar al código para apagar todos los LEDs
-    ; Si no se cumplen las condiciones anteriores, el contador está entre 1 y COUNT_MAX
-    BANKSEL PORTA
-    MOVWF PORTA ; Mostrar el valor del contador en los LEDs
-    RETURN
-
-CercadelCinco:
-    BANKSEL PORTA
-    MOVLW (1 << COUNT_MAX) - 1 ; Cargar máscara para encender todos los LEDs
-    MOVWF PORTA ; Mostrar la máscara en los LEDs
-    RETURN
-
-MasCercaDelCero:
-    BANKSEL PORTA
-    CLRF PORTA ; Apagar todos los LEDs
-    RETURN
-
-; Rutina para incrementar el contador
-Incrementar:
-    BANKSEL count
-    INCF count, F ; Incrementar el valor del contador
-    CALL VerificarLeds ; Verificar los LEDs
-    RETURN
-
-; Rutina para decrementar el contador
-Decrementar:
-    BANKSEL count
-    DECF count, F ; Decrementar el valor del contador
-    CALL VerificarLeds ; Verificar los LEDs
-    RETURN
-
-; Rutina para verificar y controlar los LEDs
-VerificarLeds:
-    BANKSEL count
-    MOVF count, W ; Mover el valor del contador a W
-
-    ; Verificar si el contador es mayor a COUNT_MAX
-    BANKSEL COUNT_MAX
-    SUBWF count, W ; Restar el valor del contador a COUNT_MAX
-    BTFSC STATUS, 0 ; Saltar si el resultado es cero (C = 0, el contador es mayor a COUNT_MAX)
-    GOTO CercadelCinco ; Si es mayor, saltar al código para encender todos los LEDs
-
-    ; Verificar si el contador es menor a 1
-    BTFSS STATUS, 2 ; Saltar si el resultado es cero (Z = 1, el contador es menor a 1)
-    GOTO MasCercaDelCero ; Si no es cero, saltar al código para apagar todos los LEDs
-    ; Si no se cumplen las condiciones anteriores, el contador está entre 1 y COUNT_MAX
-    BANKSEL PORTA
-    MOVWF PORTA ; Mostrar el valor del contador en los LEDs
-    RETURN
-
-; Subrutina de retardo
-Delay:
-   MOVWF 0x21 ; Guardar el valor inicial en un registro temporal
-
-DelayLoop:
-   DECFSZ 0x21, F ; Decrementar el contador y verificar si es cero
-   GOTO DelayLoop ; Si no es cero, repetir el bucle
-   RETURN
+    END     MAIN
 
 
