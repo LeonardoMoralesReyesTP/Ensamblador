@@ -50,7 +50,8 @@ MAIN:  ;Marca el punto de inicio del programa principal.
    BCF TRISA,4 ;Set RA0 to output
    BCF TRISA,5 ;Set RA0 to output
    BCF TRISA,6 ;Set RA0 to output
-   
+   BANKSEL PORTA
+   CLRF	PORTA
    BANKSEL TRISD
    BSF TRISD,0 ;Set RA0 to input
    BSF TRISD,1 ;Set RA0 to input
@@ -75,11 +76,23 @@ MAIN:  ;Marca el punto de inicio del programa principal.
     MOVWF NUMERO ;Mover el contenido del registro de trabajo W, a variable numero
     CLRW ;Limpiar registro de trabajo
     ;BCF	PORTD, 1 ; Colocar en 1 lógico el puerto D1
-   
+	BCF PORTA,0
+	CALL DELAY
+	BCF PORTA,1
+	CALL DELAY
+	BCF PORTA,2
+	CALL DELAY
+	BCF PORTA,3
+	CALL DELAY
+	BCF PORTA,4
+	CALL DELAY
+	;BCF PORTA,5
+	;CALL DELAY
+	;BCF PORTA,6
+	;CALL DELAY
 MainLoop:
-    
-    
-    
+
+	
   ;Inicio de sección botones y condiciones
     BTFSC PORTD, 0 ;Si se presiona el botón en RD0...
     GOTO INCREMENTO
@@ -101,7 +114,7 @@ MainLoop:
     GOTO	    MainLoop            ; Una vez que se completa el retraso, el programa vuelve al bucle principal y repite el proceso.
 INCREMENTO:
     ; Comparar si NUMERO es igual a 0
-    MOVLW 4     ; Cargar el valor 0 en el registro W
+    MOVLW 5     ; Cargar el valor 0 en el registro W
     SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
     BTFSS STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
     INCF NUMERO ;Si los valores no son iguales, entonces no es 4, y debe incrementar
@@ -160,7 +173,10 @@ CALCULARLEDS:
     GOTO ENCENDERLED4
     ;MOVF PORTC, 0
     ;BCF PORTC, 0
-    
+    MOVLW 5    ; Cargar el valor 0 en el registro W
+    SUBWF NUMERO, W    ; Restar NUMERO de W y almacenar el resultado en W
+    BTFSC STATUS, 2    ; Saltar si el resultado no es igual a cero (Z = 0)
+    GOTO ENCENDERLED5
     
     GOTO MainLoop
     
@@ -192,6 +208,13 @@ ENCENDERLED4:
     BCF	PORTC,0
     BCF PORTC,1
     BCF PORTC,2
+    BSF PORTC,3
+    GOTO MainLoop
+    ;BSF PORTC,4
+    ENCENDERLED5:
+    BSF	PORTC,0
+    BSF PORTC,1
+    BSF PORTC,2
     BSF PORTC,3
     GOTO MainLoop
     ;BSF PORTC,4
