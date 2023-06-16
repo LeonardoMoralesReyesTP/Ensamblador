@@ -197,13 +197,6 @@ ENCENDERLED3:
     BCF PORTC,1
     BSF PORTC,2
     BCF PORTC,3
-     CALL DELAY
-    BSF PORTA,0
-    BSF PORTA,1
-    BSF PORTA,2
-    BSF PORTA,3
-    BSF PORTA,4
-    BSF PORTA,5
 GOTO MainLoop
 ENCENDERLED4:
     BCF	PORTC,0
@@ -234,5 +227,3 @@ DELAY_LOOP: ;Start delay loop
 
 
     END     MAIN
-
-
