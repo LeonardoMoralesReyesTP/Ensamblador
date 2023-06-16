@@ -32,7 +32,19 @@
 ;  Etiqueta MainCode, es donde se encuentra el código principal.
 ; Initialize the PIC hardware
 ;
-
+ BANKSEL TRISA
+   BCF TRISA,0 ;Set RA0 to output
+   BCF TRISA,1 ;Set RA0 to output
+   BCF TRISA,2 ;Set RA0 to output
+   BCF TRISA,3 ;Set RA0 to output
+   BCF TRISA,4 ;Set RA0 to output
+   BCF TRISA,5 ;Set RA0 to output
+   BANKSEL PORTA
+   CLRF	PORTA
+    BANKSEL TRISB
+   BCF TRISB,0
+   BANKSEL PORTB
+   CLRF	PORTB
 MAIN:  ;Marca el punto de inicio del programa principal.
   ;serie de instrucciones BANKSEL que se utilizan para seleccionar 
   ;los bancos de registro adecuados antes de realizar operaciones 
@@ -42,22 +54,16 @@ MAIN:  ;Marca el punto de inicio del programa principal.
   ;Las instrucciones BCF y BSF se utilizan para borrar y establecer bits 
   ;en los puertos seleccionados. 
   ;Por ejemplo, BCF TRISB, 0 configura el primer bit del puerto B como salida.
-   BANKSEL TRISA
-   BCF TRISA,0 ;Set RA0 to output
-   BCF TRISA,1 ;Set RA0 to output
-   BCF TRISA,2 ;Set RA0 to output
-   BCF TRISA,3 ;Set RA0 to output
-   BCF TRISA,4 ;Set RA0 to output
-   BCF TRISA,5 ;Set RA0 to output
-   BCF TRISA,6 ;Set RA0 to output
-   BANKSEL PORTA
-   CLRF	PORTA
+  
+  ;; BCF TRISA,6 ;Set RA0 to output
+   
+  
    BANKSEL TRISD
    BSF TRISD,0 ;Set RA0 to input
    BSF TRISD,1 ;Set RA0 to input
    BSF TRISD,2 ;Set RA0 to input
    BANKSEL PORTD
-   CLRF PORTB
+   CLRF PORTD
    
    BANKSEL TRISC;Se definen LEDS como salida
    BCF TRISC, 0
@@ -76,20 +82,7 @@ MAIN:  ;Marca el punto de inicio del programa principal.
     MOVWF NUMERO ;Mover el contenido del registro de trabajo W, a variable numero
     CLRW ;Limpiar registro de trabajo
     ;BCF	PORTD, 1 ; Colocar en 1 lógico el puerto D1
-	BCF PORTA,0
-	CALL DELAY
-	BCF PORTA,1
-	CALL DELAY
-	BCF PORTA,2
-	CALL DELAY
-	BCF PORTA,3
-	CALL DELAY
-	BCF PORTA,4
-	CALL DELAY
-	;BCF PORTA,5
-	;CALL DELAY
-	;BCF PORTA,6
-	;CALL DELAY
+	
 MainLoop:
 
 	
@@ -185,6 +178,7 @@ ENCENDERLED0:
     BCF PORTC,1
     BCF PORTC,2
     BCF PORTC,3
+
   GOTO MainLoop
 ENCENDERLED1:
     BSF	PORTC,0
@@ -203,6 +197,13 @@ ENCENDERLED3:
     BCF PORTC,1
     BSF PORTC,2
     BCF PORTC,3
+     CALL DELAY
+    BSF PORTA,0
+    BSF PORTA,1
+    BSF PORTA,2
+    BSF PORTA,3
+    BSF PORTA,4
+    BSF PORTA,5
 GOTO MainLoop
 ENCENDERLED4:
     BCF	PORTC,0
